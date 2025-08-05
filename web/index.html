@@ -1,0 +1,19 @@
+<html>
+  <head>
+    <title>wired</title>
+  </head>
+  <body>
+    <h1>【wired-world】</h1>
+    <div id="posts" hx-get="/post" hx-trigger="load, every 3s"> </div>
+    <form hx-post="/post" hx-target="#posts" hx-swap="beforeend" hx-on::after-request="if(event.detail.successful) this.reset()">
+      <textarea cols="40" rows="10" name="message"></textarea>
+      <button>MARK</button>
+    </form>
+    <span>max message size 0x80 bytes</span>
+    <script
+      src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.6/dist/htmx.min.js"
+      integrity="sha384-Akqfrbj/HpNVo8k11SXBb6TlBWmXXlYQrCSqEWmyKJe+hDm3Z/B2WVG4smwBkRVm"
+      crossorigin="anonymous"
+    ></script>
+  </body>
+</html>
