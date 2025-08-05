@@ -25,13 +25,13 @@ func AllPost(posts repository.Posts) http.Handler {
 
 		ps, err := posts.All(ctx)
 		if err != nil {
-			log.Printf("[%s]: %s", r.RemoteAddr, err)
+			log.Printf("[%s]: get all posts: %s", r.RemoteAddr, err)
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return
 		}
 
 		if err := tmpl.ExecuteTemplate(w, "posts.html", ps); err != nil {
-			log.Printf("[%s]: %s", r.RemoteAddr, err)
+			log.Printf("[%s]: render all posts: %s", r.RemoteAddr, err)
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return
 		}
@@ -48,22 +48,22 @@ func AddNewPost(posts repository.Posts) http.Handler {
 			return
 		}
 
-		m := r.FormValue(messageFormName)
+		m := data.PrepareMessage(r.FormValue(messageFormName))
 		if err := data.ValidateMessage(m); err != nil {
 			log.Printf("[%s]: %s", r.RemoteAddr, err)
-			http.Error(w, http.StatusText(http.StatusRequestEntityTooLarge), http.StatusRequestEntityTooLarge)
+			http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 			return
 		}
 
 		p, err := posts.Add(ctx, time.Now(), m)
 		if err != nil {
-			log.Printf("[%s]: %s", r.RemoteAddr, err)
+			log.Printf("[%s]: add post: %s", r.RemoteAddr, err)
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return
 		}
 
 		if err := tmpl.ExecuteTemplate(w, "post.html", &p); err != nil {
-			log.Printf("[%s]: %s", r.RemoteAddr, err)
+			log.Printf("[%s]: render added post: %s", r.RemoteAddr, err)
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return
 		}
