@@ -10,4 +10,4 @@ services:
       - "8000:80"
     volumes:
       - $PWD/db/:/db/
-    restart: unless-stoped
+    restart: unless-stopped
