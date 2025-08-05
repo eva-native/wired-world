@@ -4,9 +4,10 @@ services:
   web:
     build: .
     command:
-      - -db='/db/w.db'
-      - -addr=':80'
+      - -db=/db/w.db
+      - -addr=:80
     ports:
       - "8000:80"
     volumes:
-      - /var/lib/wired-world:/db
+      - $PWD/db/:/db/
+    restart: unless-stop
