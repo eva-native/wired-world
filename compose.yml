@@ -1,0 +1,12 @@
+name: wired-world
+
+service:
+  web:
+    build:
+      context: .
+      args:
+        - DB="/db/w.db"
+    ports:
+      - "8000:80"
+    volumes:
+      - /var/lib/wired-world:/db
