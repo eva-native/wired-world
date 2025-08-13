@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"context"
-	"html/template"
 	"log"
 	"net/http"
 	"time"
@@ -16,7 +15,7 @@ const (
 	messageFormName = "message"
 )
 
-var tmpl = template.Must(template.ParseFS(web.Templates, "*/**"))
+var tmpl = web.Templates()
 
 func AllPost(posts repository.Posts) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -30,7 +29,7 @@ func AllPost(posts repository.Posts) http.Handler {
 			return
 		}
 
-		if err := tmpl.ExecuteTemplate(w, "posts.html", ps); err != nil {
+		if err := tmpl.ExecuteTemplate(w, "posts.tmpl", ps); err != nil {
 			log.Printf("[%s]: render all posts: %s", r.RemoteAddr, err)
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return
@@ -62,7 +61,7 @@ func AddNewPost(posts repository.Posts) http.Handler {
 			return
 		}
 
-		if err := tmpl.ExecuteTemplate(w, "post.html", &p); err != nil {
+		if err := tmpl.ExecuteTemplate(w, "post.tmpl", &p); err != nil {
 			log.Printf("[%s]: render added post: %s", r.RemoteAddr, err)
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return
