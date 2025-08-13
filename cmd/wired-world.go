@@ -35,7 +35,7 @@ func main() {
 	log.Printf("Database open: %s", *dsn)
 
 	mux := http.NewServeMux()
-	mux.Handle("/", http.FileServer(http.FS(web.Content)))
+	mux.Handle("/", http.FileServerFS(web.Content()))
 	mux.Handle("/post", handlers.AllPost(&db))
 	mux.Handle("POST /post", handlers.AddNewPost(&db))
 
