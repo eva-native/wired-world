@@ -1,34 +1,34 @@
 <html>
   <head>
     <title>wired</title>
+    <link rel="stylesheet" href="style/style.css">
   </head>
   <body>
-    <div class="header">
+    <div class="header container">
       <h1>【wired-world】</h1>
-    </div>
-    <div class="nav"></div>
-    <div class="content">
-      <div id="posts" hx-get="/post" hx-trigger="load, every 3s"> </div>
-      <form id="messageForm"
-            hx-post="/post"
-            hx-target="#posts"
-            hx-swap="beforeend"
-            hx-on::after-request="if(event.detail.successful) this.reset()">
-        <textarea cols="40"
-                  rows="10"
-                  name="message"
-                  id="messageArea"></textarea>
-        <button id="submitButton" type="submit">MARK</button>
-        <p>
-          message size: <span id="messageSize">0x00 bytes</span>
-        </p>
-      </form>
-      <span>max message size 0x80 bytes</span>
-    </div>
-    <div class="footer">
       <p>
         source code: <a href="https://github.com/eva-native/wired-world">github</a>
       </p>
+    </div>
+    <div class="nav"></div>
+    <div class="content container">
+      <div class="guest-book">
+        <div id="posts" hx-get="/post" hx-trigger="load, every 3s"> </div>
+        <form id="messageForm"
+              hx-post="/post"
+              hx-target="#posts"
+              hx-swap="beforeend"
+              hx-on::after-request="if(event.detail.successful) this.reset()">
+          <textarea rows="10"
+                    name="message"
+                    id="messageArea"></textarea>
+          <button id="submitButton" type="submit">MARK</button>
+          <p>
+            message size: <span id="messageSize" class="message-size">0x00 bytes</span>
+          </p>
+          <span>max message size <span class="message-size">0x80</span> bytes</span>
+        </form>
+      </div>
     </div>
     <script
       src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.6/dist/htmx.min.js"
@@ -50,7 +50,7 @@
 
       messageForm.addEventListener("htmx:beforeRequest", e => {
         if (messageArea.value.length === 0 ||
-          sizeInBytes(messageArea.value) >= maxMessageSize) {
+          sizeInBytes(messageArea.value) > maxMessageSize) {
           e.preventDefault()
           return
         }
