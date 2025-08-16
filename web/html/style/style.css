@@ -7,6 +7,10 @@ body {
   font-family: 'Times New Roman', Times, serif;
 }
 
+a {
+  text-decoration: none;
+}
+
 .container {
   width: 80%;
   margin: 0 auto;
@@ -15,10 +19,6 @@ body {
 div.header {
   padding: 25px 0 10px;
   text-align: center;
-}
-
-div.content {
-  height: 100vh;
 }
 
 div.guest-book {
