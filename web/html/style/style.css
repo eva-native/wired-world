@@ -5,10 +5,16 @@
 
 body {
   font-family: 'Times New Roman', Times, serif;
+  background-color: darkblue;
+  color: whitesmoke;
 }
 
-a {
-  text-decoration: none;
+a:link {
+  color: whitesmoke;
+}
+
+a:visited {
+  color: darkcyan;
 }
 
 .container {
@@ -39,7 +45,6 @@ form#messageForm textarea {
   width: 100%;
   margin: 0 auto;
   display: block;
-  resize: none;
   overflow: auto;
   font-family: monospace;
   font-size: 12px;
@@ -63,13 +68,10 @@ span.message-time {
 
 pre.message-text {
   display: block;
-  word-wrap: break-word;
-  white-space: wrap;
+  white-space: pre-wrap;
   width: 100%;
-  overflow-x: auto;
 }
 
 span.message-size {
   font-family: monospace;
 }
-
