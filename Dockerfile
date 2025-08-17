@@ -4,8 +4,8 @@ WORKDIR /src
 COPY . /src
 ENV CGO_ENABLED=1
 
-RUN apk add --no-cache alpine-sdk
-RUN go build -o /bin/wired-world ./cmd/wired-world.go
+RUN apk add --no-cache alpine-sdk &&\
+    go build -tags embed -o /bin/wired-world ./cmd/wired-world.go
 
 FROM alpine:latest
 

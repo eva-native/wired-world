@@ -1,0 +1,77 @@
+* {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Times New Roman', Times, serif;
+  background-color: darkblue;
+  color: whitesmoke;
+}
+
+a:link {
+  color: whitesmoke;
+}
+
+a:visited {
+  color: darkcyan;
+}
+
+.container {
+  width: 80%;
+  margin: 0 auto;
+}
+
+div.header {
+  padding: 25px 0 10px;
+  text-align: center;
+}
+
+div.guest-book {
+  width: 40%;
+  margin: 0 auto;
+}
+
+div.guest-book div#posts {
+  margin: 20px auto;
+}
+
+form#messageForm {
+  margin: 0 auto;
+}
+
+form#messageForm textarea {
+  max-width: 100%;
+  width: 100%;
+  margin: 0 auto;
+  display: block;
+  overflow: auto;
+  font-family: monospace;
+  font-size: 12px;
+}
+
+form#messageForm button {
+  font-size: 14px;
+  margin: 10px 0;
+  display: block;
+}
+
+div.message {
+  font-size: 12px;
+  font-family: monospace !important;
+}
+
+span.message-time {
+  display: block;
+  text-align: right;
+}
+
+pre.message-text {
+  display: block;
+  white-space: pre-wrap;
+  width: 100%;
+}
+
+span.message-size {
+  font-family: monospace;
+}

@@ -8,7 +8,7 @@ import (
 	"io/fs"
 )
 
-//go:embed html/*
+//go:embed html
 var content embed.FS
 
 //go:embed template
