@@ -5,15 +5,15 @@ Simple guest book/board on go
 ## Deployment
 
 1) Docker compose
-   ```shell
+  ```
   docker compose up -d
   ```
 
-3) Docker container
-   ```
-   docker build -t wired-world:latest .
-   docker run -ti -p 8080:8080 -v $(pwd)/db:/db wired-world:latest -db=file://db/w.db?cache=share&mode=rwc
-   ```
+2) Docker container
+```
+docker build -t wired-world:latest .
+docker run -ti -p 8080:8080 -v $(pwd)/db:/db wired-world:latest -db=file://db/w.db?cache=share&mode=rwc
+```
 
 ## Program options
 
