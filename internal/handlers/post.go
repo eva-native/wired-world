@@ -21,7 +21,6 @@ func AllPost(posts repository.Posts) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx, cancel := context.WithTimeout(r.Context(), time.Second*2)
 		defer cancel()
-
 		ps, err := posts.All(ctx)
 		if err != nil {
 			log.Printf("[%s]: get all posts: %s", r.RemoteAddr, err)
