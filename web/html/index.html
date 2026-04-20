@@ -18,7 +18,7 @@
         <form id="messageForm"
               hx-post="/post"
               hx-target="#posts"
-              hx-swap="beforeend"
+              hx-swap="innerHTML"
               hx-on::after-request="if(event.detail.successful) this.reset()">
           <textarea rows="10"
                     name="message"

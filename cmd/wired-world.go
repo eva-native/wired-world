@@ -14,11 +14,8 @@ import (
 	"github.com/eva-native/wired-world/web"
 )
 
-const (
-	DBPath = "./wired.db"
-)
-
-var dsn = flag.String("db", ":memory:", "Sqlite3 DSN")
+var dsn = flag.String("db", ":memory:", "SQLite DSN (used when -redis is not set)")
+var redisAddr = flag.String("redis", "", "Redis address host:port")
 var addr = flag.String("addr", ":8080", "HTTP server listen address")
 
 func main() {
@@ -27,17 +24,30 @@ func main() {
 
 	flag.Parse()
 
-	db, err := repository.NewPostDB(ctx, *dsn)
-	if err != nil {
-		log.Fatalln("Database error: ", err)
+	var posts repository.Posts
+
+	if *redisAddr != "" {
+		rdb, err := repository.NewPostRedis(ctx, *redisAddr)
+		if err != nil {
+			log.Fatalln("Redis error:", err)
+		}
+		defer rdb.Close()
+		log.Printf("Redis open: %s", *redisAddr)
+		posts = &rdb
+	} else {
+		db, err := repository.NewPostDB(ctx, *dsn)
+		if err != nil {
+			log.Fatalln("Database error:", err)
+		}
+		defer db.DB.Close()
+		log.Printf("Database open: %s", *dsn)
+		posts = &db
 	}
-	defer db.DB.Close()
-	log.Printf("Database open: %s", *dsn)
 
 	mux := http.NewServeMux()
 	mux.Handle("/", http.FileServerFS(web.Content()))
-	mux.Handle("/post", handlers.AllPost(&db))
-	mux.Handle("POST /post", handlers.AddNewPost(&db))
+	mux.Handle("/post", handlers.AllPost(posts))
+	mux.Handle("POST /post", handlers.AddNewPost(posts))
 
 	if err := listenAndServe(ctx, *addr, mux); err != nil {
 		log.Printf("Server error: %v", err)

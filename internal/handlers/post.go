@@ -53,15 +53,21 @@ func AddNewPost(posts repository.Posts) http.Handler {
 			return
 		}
 
-		p, err := posts.Add(ctx, time.Now(), m)
-		if err != nil {
+		if _, err := posts.Add(ctx, time.Now(), m); err != nil {
 			log.Printf("[%s]: add post: %s", r.RemoteAddr, err)
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return
 		}
 
-		if err := tmpl.ExecuteTemplate(w, "post.tmpl", &p); err != nil {
-			log.Printf("[%s]: render added post: %s", r.RemoteAddr, err)
+		ps, err := posts.All(ctx)
+		if err != nil {
+			log.Printf("[%s]: get all posts after add: %s", r.RemoteAddr, err)
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			return
+		}
+
+		if err := tmpl.ExecuteTemplate(w, "posts.tmpl", ps); err != nil {
+			log.Printf("[%s]: render posts after add: %s", r.RemoteAddr, err)
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return
 		}
