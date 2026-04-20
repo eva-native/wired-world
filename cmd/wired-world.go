@@ -52,7 +52,12 @@ func main() {
 
 	metricsMux := http.NewServeMux()
 	metricsMux.Handle("/metrics", promhttp.Handler())
-	go serve(ctx, *metricsAddr, metricsMux, logger)
+	go func() {
+		if err := serve(ctx, *metricsAddr, metricsMux, logger); err != nil {
+			logger.Error("metrics server error", "err", err)
+			os.Exit(1)
+		}
+	}()
 
 	if err := serve(ctx, *addr, mux, logger); err != nil {
 		logger.Error("server error", "err", err)
