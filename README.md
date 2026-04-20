@@ -26,8 +26,22 @@ go run ./cmd/wired-world.go -redis=localhost:6379
 
 ## Program options
 
-- `-addr`: listen address (`:8080` by default)
-- `-redis`: Redis address `host:port` (`localhost:6379` by default)
+| Flag | Default | Description |
+|---|---|---|
+| `-addr` | `:8080` | HTTP server listen address |
+| `-redis` | `localhost:6379` | Redis address `host:port` |
+| `-behind-proxy` | `false` | Trust `X-Real-IP` / `X-Forwarded-For` headers for rate limiting |
+
+## Rate limiting
+
+`POST /post` is rate limited to **1 request per 5 seconds per IP** with a burst of 2. Exceeding the limit returns `HTTP 429` with a `Retry-After: 5` header.
+
+When running behind a reverse proxy (e.g. nginx), set `-behind-proxy=true` so the real client IP is read from `X-Real-IP` / `X-Forwarded-For` headers. Only enable this when a trusted proxy sets these headers.
+
+For nginx, ensure this is set:
+```nginx
+proxy_set_header X-Real-IP $remote_addr;
+```
 
 ## In feature
 
