@@ -44,8 +44,12 @@ func Metrics(next http.Handler) http.Handler {
 		defer activeConnections.Dec()
 
 		start := time.Now()
-		rw := &responseWriter{ResponseWriter: w, status: http.StatusOK}
-		next.ServeHTTP(rw, r)
+		rw, ok := w.(*responseWriter)
+		if !ok {
+			rw = &responseWriter{ResponseWriter: w, status: http.StatusOK}
+			w = rw
+		}
+		next.ServeHTTP(w, r)
 
 		duration := time.Since(start).Seconds()
 		status := strconv.Itoa(rw.status)
