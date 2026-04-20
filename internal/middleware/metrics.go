@@ -51,7 +51,11 @@ func Metrics(next http.Handler) http.Handler {
 		}
 		next.ServeHTTP(w, r)
 
-		requestsTotal.WithLabelValues(r.Method, r.URL.Path, strconv.Itoa(rw.status)).Inc()
-		requestDuration.WithLabelValues(r.Method, r.URL.Path).Observe(time.Since(start).Seconds())
+		pattern := r.Pattern
+		if pattern == "" {
+			pattern = "unknown"
+		}
+		requestsTotal.WithLabelValues(r.Method, pattern, strconv.Itoa(rw.status)).Inc()
+		requestDuration.WithLabelValues(r.Method, pattern).Observe(time.Since(start).Seconds())
 	})
 }
