@@ -1,26 +1,34 @@
 # wired-world
 
-Simple guest book/board on go
+Simple guest book/board on Go, backed by Redis.
+
+## Requirements
+
+- Redis 7+
 
 ## Deployment
 
-1) Docker compose
-  ```
-  docker compose up -d
-  ```
+1) Docker Compose (recommended)
+```
+docker compose up -d
+```
 
 2) Docker container
 ```
 docker build -t wired-world:latest .
-docker run -ti -p 8080:8080 -v $(pwd)/db:/db wired-world:latest -db=file://db/w.db?cache=share&mode=rwc
+docker run -d -p 8080:8080 wired-world:latest -redis=<host>:6379
+```
+
+3) Run directly
+```
+go run ./cmd/wired-world.go -redis=localhost:6379
 ```
 
 ## Program options
 
-- -addr: provide listen address (:8080 by default)
-- -db: provide dsn for sqlite (recomended use with query = cache=share&mode=rwc for concurency) (:memory: by default)
+- `-addr`: listen address (`:8080` by default)
+- `-redis`: Redis address `host:port` (`localhost:6379` by default)
 
 ## In feature
 
-- use Websockets instead poll
-- use concurency storage
+- use Websockets instead of poll
