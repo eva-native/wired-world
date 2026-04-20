@@ -3,13 +3,17 @@ package main
 import (
 	"context"
 	"flag"
-	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
 	"time"
 
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"golang.org/x/time/rate"
+
 	"github.com/eva-native/wired-world/internal/handlers"
+	"github.com/eva-native/wired-world/internal/middleware"
 	"github.com/eva-native/wired-world/internal/repository"
 	"github.com/eva-native/wired-world/web"
 )
@@ -23,24 +27,36 @@ func main() {
 
 	flag.Parse()
 
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+	slog.SetDefault(logger)
+
 	rdb, err := repository.NewPostRedis(ctx, *redisAddr)
 	if err != nil {
-		log.Fatalln("Redis error:", err)
+		logger.Error("redis error", "err", err)
+		os.Exit(1)
 	}
 	defer rdb.Close()
-	log.Printf("Redis open: %s", *redisAddr)
+	logger.Info("redis open", "addr", *redisAddr)
+
+	rl := middleware.NewRateLimiter(rate.Every(5*time.Second), 2)
+	go rl.Cleanup(ctx, 10*time.Minute)
+
+	chain := func(h http.Handler) http.Handler {
+		return middleware.Logging(logger)(middleware.Metrics(h))
+	}
 
 	mux := http.NewServeMux()
-	mux.Handle("/", http.FileServerFS(web.Content()))
-	mux.Handle("/post", handlers.AllPost(&rdb))
-	mux.Handle("POST /post", handlers.AddNewPost(&rdb))
+	mux.Handle("/", chain(http.FileServerFS(web.Content())))
+	mux.Handle("/post", chain(handlers.AllPost(&rdb, logger)))
+	mux.Handle("POST /post", chain(rl.Middleware(handlers.AddNewPost(&rdb, logger))))
+	mux.Handle("/metrics", promhttp.Handler())
 
-	if err := listenAndServe(ctx, *addr, mux); err != nil {
-		log.Printf("Server error: %v", err)
+	if err := listenAndServe(ctx, *addr, mux, logger); err != nil {
+		logger.Error("server error", "err", err)
 	}
 }
 
-func listenAndServe(ctx context.Context, addr string, mux *http.ServeMux) error {
+func listenAndServe(ctx context.Context, addr string, mux *http.ServeMux, logger *slog.Logger) error {
 	srv := http.Server{
 		Addr:    addr,
 		Handler: mux,
@@ -49,7 +65,7 @@ func listenAndServe(ctx context.Context, addr string, mux *http.ServeMux) error 
 	errch := make(chan error, 1)
 
 	go func() {
-		log.Printf("Starting server on %s...", srv.Addr)
+		logger.Info("starting server", "addr", srv.Addr)
 		if err := srv.ListenAndServe(); err != http.ErrServerClosed {
 			errch <- err
 		}
