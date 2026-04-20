@@ -21,7 +21,6 @@ import (
 var redisAddr = flag.String("redis", "localhost:6379", "Redis address host:port")
 var addr = flag.String("addr", ":8080", "HTTP server listen address")
 var metricsAddr = flag.String("metrics-addr", ":9090", "Internal address for /metrics endpoint")
-var metricsToken = flag.String("metrics-token", "", "Bearer token to protect /metrics (disabled if empty)")
 
 func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
