@@ -18,7 +18,7 @@ func Logging(logger *slog.Logger) func(http.Handler) http.Handler {
 				"path", r.URL.Path,
 				"route", route,
 				"status", rw.status,
-				"duration_ms", time.Since(start).Milliseconds(),
+				"duration_ms", time.Since(start).Seconds()*1000,
 				"remote_addr", r.RemoteAddr,
 			)
 		})

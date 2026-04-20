@@ -8,8 +8,8 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
-var (
-	requestsTotal = prometheus.NewCounterVec(
+func NewMetrics(reg prometheus.Registerer) func(http.Handler) http.Handler {
+	requestsTotal := prometheus.NewCounterVec(
 		prometheus.CounterOpts{
 			Name: "http_requests_total",
 			Help: "Total HTTP requests by method, path, and status.",
@@ -17,7 +17,7 @@ var (
 		[]string{"method", "path", "status"},
 	)
 
-	requestDuration = prometheus.NewHistogramVec(
+	requestDuration := prometheus.NewHistogramVec(
 		prometheus.HistogramOpts{
 			Name:    "http_request_duration_seconds",
 			Help:    "HTTP request latency.",
@@ -26,29 +26,27 @@ var (
 		[]string{"method", "path"},
 	)
 
-	activeConnections = prometheus.NewGauge(
+	activeRequests := prometheus.NewGauge(
 		prometheus.GaugeOpts{
-			Name: "http_active_connections",
-			Help: "Current number of active HTTP connections.",
+			Name: "http_requests_in_flight",
+			Help: "Current number of in-flight HTTP requests.",
 		},
 	)
-)
 
-func init() {
-	prometheus.MustRegister(requestsTotal, requestDuration, activeConnections)
-}
+	reg.MustRegister(requestsTotal, requestDuration, activeRequests)
 
-func Metrics(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		activeConnections.Inc()
-		defer activeConnections.Dec()
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			activeRequests.Inc()
+			defer activeRequests.Dec()
 
-		start := time.Now()
-		rw := wrapWriter(w)
-		next.ServeHTTP(rw, r)
+			start := time.Now()
+			rw := wrapWriter(w)
+			next.ServeHTTP(rw, r)
 
-		pattern := routePattern(r)
-		requestsTotal.WithLabelValues(r.Method, pattern, strconv.Itoa(rw.status)).Inc()
-		requestDuration.WithLabelValues(r.Method, pattern).Observe(time.Since(start).Seconds())
-	})
+			pattern := routePattern(r)
+			requestsTotal.WithLabelValues(r.Method, pattern, strconv.Itoa(rw.status)).Inc()
+			requestDuration.WithLabelValues(r.Method, pattern).Observe(time.Since(start).Seconds())
+		})
+	}
 }

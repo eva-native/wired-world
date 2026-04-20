@@ -9,6 +9,7 @@ import (
 	"os/signal"
 	"time"
 
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	"github.com/eva-native/wired-world/internal/handlers"
@@ -38,8 +39,9 @@ func main() {
 	defer rdb.Close()
 	logger.Info("redis open", "addr", *redisAddr)
 
+	metricsMiddleware := middleware.NewMetrics(prometheus.DefaultRegisterer)
 	chain := func(h http.Handler) http.Handler {
-		return middleware.Logging(logger)(middleware.Metrics(h))
+		return middleware.Logging(logger)(metricsMiddleware(h))
 	}
 
 	mux := http.NewServeMux()
