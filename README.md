@@ -2,24 +2,32 @@
 
 Simple guest book/board on Go, backed by Redis.
 
+![CI](https://github.com/eva-native/wired-world/actions/workflows/ci.yml/badge.svg)
+
 ## Requirements
 
 - Redis 7+
 
 ## Deployment
 
-1) Docker Compose (recommended)
+**1) Docker Compose (recommended)**
 ```
 docker compose up -d
 ```
+The app listens on `http://localhost:8000`.
 
-2) Docker container
+**2) Pre-built Docker image**
+```
+docker run -d -p 8080:8080 ghcr.io/eva-native/wired-world -redis=<host>:6379
+```
+
+**3) Build and run with Docker**
 ```
 docker build -t wired-world:latest .
 docker run -d -p 8080:8080 wired-world:latest -redis=<host>:6379
 ```
 
-3) Run directly
+**4) Run directly**
 ```
 go run ./cmd/wired-world.go -redis=localhost:6379
 ```
@@ -40,7 +48,7 @@ Available metrics:
 
 - `http_requests_total` — request count by method, path, and status code
 - `http_request_duration_seconds` — request latency histogram
-- `http_active_connections` — current number of active connections
+- `http_requests_in_flight` — current number of in-flight requests
 
 To scrape with Prometheus, add to `prometheus.yml`:
 ```yaml
@@ -52,6 +60,6 @@ scrape_configs:
 
 All application logs are output as JSON to stdout.
 
-## In feature
+## Upcoming
 
-- use Websockets instead of poll
+- Use WebSockets instead of polling
