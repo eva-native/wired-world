@@ -18,15 +18,14 @@ import (
 	"github.com/eva-native/wired-world/web"
 )
 
-var redisAddr = flag.String("redis", "localhost:6379", "Redis address host:port")
-var addr = flag.String("addr", ":8080", "HTTP server listen address")
-var metricsAddr = flag.String("metrics-addr", ":9090", "Internal address for /metrics endpoint")
-
 func main() {
+	redisAddr := flag.String("redis", "localhost:6379", "Redis address host:port")
+	addr := flag.String("addr", ":8080", "HTTP server listen address")
+	metricsAddr := flag.String("metrics-addr", ":9090", "Internal address for /metrics endpoint")
+	flag.Parse()
+
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()
-
-	flag.Parse()
 
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 	slog.SetDefault(logger)
@@ -53,28 +52,19 @@ func main() {
 
 	metricsMux := http.NewServeMux()
 	metricsMux.Handle("/metrics", promhttp.Handler())
-	go func() {
-		logger.Info("starting metrics server", "addr", *metricsAddr)
-		if err := http.ListenAndServe(*metricsAddr, metricsMux); err != nil {
-			logger.Error("metrics server error", "err", err)
-		}
-	}()
+	go serve(ctx, *metricsAddr, metricsMux, logger)
 
-	if err := listenAndServe(ctx, *addr, mux, logger); err != nil {
+	if err := serve(ctx, *addr, mux, logger); err != nil {
 		logger.Error("server error", "err", err)
 	}
 }
 
-func listenAndServe(ctx context.Context, addr string, mux *http.ServeMux, logger *slog.Logger) error {
-	srv := http.Server{
-		Addr:    addr,
-		Handler: mux,
-	}
+func serve(ctx context.Context, addr string, handler http.Handler, logger *slog.Logger) error {
+	srv := &http.Server{Addr: addr, Handler: handler}
 
 	errch := make(chan error, 1)
-
 	go func() {
-		logger.Info("starting server", "addr", srv.Addr)
+		logger.Info("starting server", "addr", addr)
 		if err := srv.ListenAndServe(); err != http.ErrServerClosed {
 			errch <- err
 		}
@@ -82,14 +72,13 @@ func listenAndServe(ctx context.Context, addr string, mux *http.ServeMux, logger
 
 	select {
 	case <-ctx.Done():
-		ctx, cancel := context.WithTimeout(ctx, time.Second*10)
+		shutCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
-
-		err := srv.Shutdown(ctx)
-		if err != nil {
+		if err := srv.Shutdown(shutCtx); err != nil {
 			srv.Close()
+			return err
 		}
-		return err
+		return nil
 	case err := <-errch:
 		return err
 	}
