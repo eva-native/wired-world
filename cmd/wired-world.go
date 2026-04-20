@@ -22,10 +22,11 @@ func main() {
 	redisAddr := flag.String("redis", "localhost:6379", "Redis address host:port")
 	addr := flag.String("addr", ":8080", "HTTP server listen address")
 	metricsAddr := flag.String("metrics-addr", ":9090", "Internal address for /metrics endpoint")
-	flag.Parse()
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()
+
+	flag.Parse()
 
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 	slog.SetDefault(logger)
