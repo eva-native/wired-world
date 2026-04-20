@@ -20,6 +20,8 @@ import (
 
 var redisAddr = flag.String("redis", "localhost:6379", "Redis address host:port")
 var addr = flag.String("addr", ":8080", "HTTP server listen address")
+var metricsAddr = flag.String("metrics-addr", ":9090", "Internal address for /metrics endpoint")
+var metricsToken = flag.String("metrics-token", "", "Bearer token to protect /metrics (disabled if empty)")
 
 func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
@@ -49,7 +51,15 @@ func main() {
 	mux.Handle("/", chain(http.FileServerFS(web.Content())))
 	mux.Handle("/post", chain(handlers.AllPost(&rdb, logger)))
 	mux.Handle("POST /post", chain(rl.Middleware(handlers.AddNewPost(&rdb, logger))))
-	mux.Handle("/metrics", promhttp.Handler())
+
+	metricsMux := http.NewServeMux()
+	metricsMux.Handle("/metrics", promhttp.Handler())
+	go func() {
+		logger.Info("starting metrics server", "addr", *metricsAddr)
+		if err := http.ListenAndServe(*metricsAddr, metricsMux); err != nil {
+			logger.Error("metrics server error", "err", err)
+		}
+	}()
 
 	if err := listenAndServe(ctx, *addr, mux, logger); err != nil {
 		logger.Error("server error", "err", err)
