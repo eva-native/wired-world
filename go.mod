@@ -2,10 +2,7 @@ module github.com/eva-native/wired-world
 
 go 1.24.5
 
-require (
-	github.com/mattn/go-sqlite3 v1.14.30
-	github.com/redis/go-redis/v9 v9.18.0
-)
+require github.com/redis/go-redis/v9 v9.18.0
 
 require (
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
