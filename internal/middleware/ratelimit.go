@@ -4,6 +4,7 @@ import (
 	"context"
 	"net"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 
@@ -16,17 +17,19 @@ type ipLimiter struct {
 }
 
 type RateLimiter struct {
-	mu       sync.Mutex
-	limiters map[string]*ipLimiter
-	r        rate.Limit
-	burst    int
+	mu           sync.Mutex
+	limiters     map[string]*ipLimiter
+	r            rate.Limit
+	burst        int
+	behindProxy  bool
 }
 
-func NewRateLimiter(r rate.Limit, burst int) *RateLimiter {
+func NewRateLimiter(r rate.Limit, burst int, behindProxy bool) *RateLimiter {
 	return &RateLimiter{
-		limiters: make(map[string]*ipLimiter),
-		r:        r,
-		burst:    burst,
+		limiters:    make(map[string]*ipLimiter),
+		r:           r,
+		burst:       burst,
+		behindProxy: behindProxy,
 	}
 }
 
@@ -61,12 +64,31 @@ func (rl *RateLimiter) Cleanup(ctx context.Context, ttl time.Duration) {
 	}
 }
 
+// clientIP extracts the real client IP. When behindProxy is true it reads
+// X-Real-IP first, then the leftmost entry of X-Forwarded-For, falling back
+// to RemoteAddr. Only enable behindProxy when a trusted proxy sets these headers.
+func clientIP(r *http.Request, behindProxy bool) string {
+	if behindProxy {
+		if ip := r.Header.Get("X-Real-IP"); ip != "" {
+			return ip
+		}
+		if fwd := r.Header.Get("X-Forwarded-For"); fwd != "" {
+			if i := strings.IndexByte(fwd, ','); i != -1 {
+				return strings.TrimSpace(fwd[:i])
+			}
+			return strings.TrimSpace(fwd)
+		}
+	}
+	ip, _, err := net.SplitHostPort(r.RemoteAddr)
+	if err != nil {
+		return r.RemoteAddr
+	}
+	return ip
+}
+
 func (rl *RateLimiter) Middleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		ip, _, err := net.SplitHostPort(r.RemoteAddr)
-		if err != nil {
-			ip = r.RemoteAddr
-		}
+		ip := clientIP(r, rl.behindProxy)
 		if !rl.get(ip).Allow() {
 			w.Header().Set("Retry-After", "5")
 			http.Error(w, http.StatusText(http.StatusTooManyRequests), http.StatusTooManyRequests)

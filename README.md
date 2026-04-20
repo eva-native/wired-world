@@ -31,6 +31,7 @@ go run ./cmd/wired-world.go -redis=localhost:6379
 | `-addr` | `:8080` | HTTP server listen address |
 | `-redis` | `localhost:6379` | Redis address `host:port` |
 | `-metrics-addr` | `:9090` | Internal address for `/metrics` endpoint |
+| `-behind-proxy` | `false` | Trust `X-Real-IP` / `X-Forwarded-For` headers for rate limiting |
 
 ## Observability
 

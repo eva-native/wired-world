@@ -22,6 +22,7 @@ func main() {
 	redisAddr := flag.String("redis", "localhost:6379", "Redis address host:port")
 	addr := flag.String("addr", ":8080", "HTTP server listen address")
 	metricsAddr := flag.String("metrics-addr", ":9090", "Internal address for /metrics endpoint")
+	behindProxy := flag.Bool("behind-proxy", false, "Trust X-Real-IP / X-Forwarded-For headers for rate limiting")
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()
@@ -39,7 +40,7 @@ func main() {
 	defer rdb.Close()
 	logger.Info("redis open", "addr", *redisAddr)
 
-	rl := middleware.NewRateLimiter(rate.Every(5*time.Second), 2)
+	rl := middleware.NewRateLimiter(rate.Every(5*time.Second), 2, *behindProxy)
 	go rl.Cleanup(ctx, 10*time.Minute)
 
 	chain := func(h http.Handler) http.Handler {
