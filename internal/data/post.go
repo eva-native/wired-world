@@ -33,8 +33,10 @@ func PrepareMessage(m string) string {
 
 func ValidateMessage(m string) error {
 	switch s := len(m); {
-	case s == 0: return ErrEmptyMessage
-	case s > 0x80: return ErrTooLongMessage
+	case s == 0:
+		return ErrEmptyMessage
+	case s > 0x80:
+		return ErrTooLongMessage
 	}
 	return nil
 }

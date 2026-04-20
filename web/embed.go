@@ -24,4 +24,3 @@ var tmpl = template.Must(template.ParseFS(templates, "template/*.tmpl"))
 func Templates() *template.Template {
 	return tmpl
 }
-
