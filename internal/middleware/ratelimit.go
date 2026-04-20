@@ -43,11 +43,13 @@ func (rl *RateLimiter) get(ip string) *rate.Limiter {
 }
 
 func (rl *RateLimiter) Cleanup(ctx context.Context, ttl time.Duration) {
+	ticker := time.NewTicker(ttl)
+	defer ticker.Stop()
 	for {
 		select {
 		case <-ctx.Done():
 			return
-		case <-time.After(ttl):
+		case <-ticker.C:
 			rl.mu.Lock()
 			for ip, entry := range rl.limiters {
 				if time.Since(entry.lastSeen) > ttl {
