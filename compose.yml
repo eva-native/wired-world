@@ -1,13 +1,28 @@
 name: wired-world
 
 services:
+  redis:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      retries: 5
+
   web:
     build: .
     command:
-      - -db=/db/w.db
+      - -redis=redis:6379
       - -addr=:80
     ports:
       - "127.0.0.1:8000:80"
-    volumes:
-      - $PWD/db/:/db/
+    depends_on:
+      redis:
+        condition: service_healthy
     restart: unless-stopped
+
+volumes:
+  redis_data:
