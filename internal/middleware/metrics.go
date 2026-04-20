@@ -44,17 +44,10 @@ func Metrics(next http.Handler) http.Handler {
 		defer activeConnections.Dec()
 
 		start := time.Now()
-		rw, ok := w.(*responseWriter)
-		if !ok {
-			rw = &responseWriter{ResponseWriter: w, status: http.StatusOK}
-			w = rw
-		}
-		next.ServeHTTP(w, r)
+		rw := wrapWriter(w)
+		next.ServeHTTP(rw, r)
 
-		pattern := r.Pattern
-		if pattern == "" {
-			pattern = "unknown"
-		}
+		pattern := routePattern(r)
 		requestsTotal.WithLabelValues(r.Method, pattern, strconv.Itoa(rw.status)).Inc()
 		requestDuration.WithLabelValues(r.Method, pattern).Observe(time.Since(start).Seconds())
 	})
