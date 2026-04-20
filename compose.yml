@@ -17,6 +17,7 @@ services:
     command:
       - -redis=redis:6379
       - -addr=:80
+      - -metrics-addr=:9090
     ports:
       - "127.0.0.1:8000:80"
     depends_on:
