@@ -1,11 +1,11 @@
-FROM golang:1.24-alpine
+FROM golang:1.26-alpine
 
 WORKDIR /src
 COPY . /src
 
 RUN go build -tags embed -o /bin/wired-world ./cmd/wired-world.go
 
-FROM alpine:3.21
+FROM alpine:3.24
 
 COPY --from=0 /bin/wired-world /bin/
 EXPOSE 8080/tcp
